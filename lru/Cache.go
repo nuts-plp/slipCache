@@ -1,4 +1,4 @@
-package slipCache
+package lru
 
 import (
 	"container/list"
