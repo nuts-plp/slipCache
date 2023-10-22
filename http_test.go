@@ -16,8 +16,8 @@ func TestHttpPool_ServeHttp(t *testing.T) {
 	_ = NewGroup("class", 2<<10, GetterFunc(
 		func(key string) ([]byte, error) {
 			log.Println("[http search] search ", key)
-			if _, ok := db[key]; ok {
-				return []byte(key), nil
+			if v, ok := db[key]; ok {
+				return []byte(v), nil
 			}
 			return nil, fmt.Errorf("key 不存在")
 		}))
@@ -26,4 +26,8 @@ func TestHttpPool_ServeHttp(t *testing.T) {
 
 	log.Println("[slipCache] run at ", addr)
 	log.Fatal(http.ListenAndServe(addr, peer))
+}
+
+func TestHu(t *testing.T) {
+	fmt.Println(string([]byte{118, 49}))
 }
