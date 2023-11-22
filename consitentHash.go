@@ -16,13 +16,13 @@ type Map struct {
 }
 
 //New 实例化一个全局HashMap实例
-func New(replicas int, fn HashFunc) *Map {
+func New(replicas int, hf HashFunc) *Map {
 	m := &Map{
 		replicas: replicas,
 		hashMap:  make(map[int]string),
-		hashFunc: fn,
+		hashFunc: hf,
 	}
-	if fn == nil {
+	if hf == nil {
 		m.hashFunc = crc32.ChecksumIEEE
 		return m
 	}
@@ -48,7 +48,7 @@ func (m *Map) Get(key string) string {
 	}
 	hash := int(m.hashFunc([]byte(key)))
 	idx := sort.Search(len(m.hashCircle), func(i int) bool {
-		return m.hashCircle[i] > hash
+		return m.hashCircle[i] >= hash
 	})
 	//返回虚拟节点对应的真实节点
 	return m.hashMap[m.hashCircle[idx%len(m.hashCircle)]]

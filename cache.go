@@ -51,6 +51,7 @@ type Group struct {
 	name      string
 	getter    Getter
 	mainCache cache
+	peers     PeerPicker
 }
 
 var (
@@ -72,6 +73,13 @@ func NewGroup(name string, cacheBytes int64, getter Getter) *Group {
 	}
 	groups[name] = g
 	return g
+}
+
+func (g *Group) RegisterPeers(peer PeerPicker) {
+	if g.peers != nil {
+		panic("注册节点不止一次")
+	}
+	g.peers = peer
 }
 
 //GetGroup 根据名称获取实例,如果为nil则表示没有该Group实例
@@ -97,9 +105,24 @@ func (g *Group) Get(key string) (ByteView, error) {
 }
 
 func (g *Group) load(key string) (ByteView, error) {
+	if g.peers != nil {
+		if peer, ok := g.peers.PickPeer(key); ok {
+			if value, err := g.getFromPeer(peer, key); err == nil {
+				return value, nil
+			}
+		}
+	}
 	return g.loadLocal(key)
 }
-
+func (g Group) getFromPeer(peer PeerGetter, key string) (ByteView, error) {
+	value, err := peer.Get(g.name, key)
+	if err != nil {
+		return ByteView{}, err
+	}
+	return ByteView{
+		b: value,
+	}, nil
+}
 func (g *Group) loadLocal(key string) (ByteView, error) {
 	bytes, err := g.getter.Get(key)
 	if err != nil {
@@ -113,3 +136,11 @@ func (g *Group) loadLocal(key string) (ByteView, error) {
 func (g *Group) populateCache(key string, value ByteView) {
 	g.mainCache.add(key, value)
 }
+func createGroup() {
+	//return slipCache.NewGroup("scores", 2<<10, GetterFunc(func(key string) ([]byte, error) {
+	//	log.Println("[slipDB] search %v ", key)
+	//	if v,ok :=db
+	//}))
+
+}
+func startCacheServer() {}
